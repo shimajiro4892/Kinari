@@ -4,7 +4,7 @@
 
 配色は、背景色と文字色の見やすさに関する国内の研究をもとに決め、コントラスト比と色覚の違いを想定した色差を計算で確かめています。
 
-![Kinari のモック。左がサイドバー、右が Claude Code を動かしているターミナル](docs/screen.png)
+![Kinari のモック。左がサイドバー、右が Claude Code を動かしているターミナル](https://raw.githubusercontent.com/shimajiro4892/Kinari/main/docs/screen.png)
 
 <sub>画面は架空のデータで作ったモックです（`docs/mock/screen.html`。`docs/mock/render.sh` で書き出し）。</sub>
 
@@ -108,6 +108,12 @@ rm ~/Library/LaunchAgents/io.github.shimajiro4892.kinari-holidays.plist
 - 1型色覚の模擬では、3（黄土・警告）と 9（朱・Claude の色）の差が小さくなります（ΔE≈3.8）。この2色が隣り合う場面は少ないので、明るさの差（ΔL*≈8）で見分ける前提にしています。
 - 黒背景を好む人や、暗い部屋で使う場合には向きません。ダーク版は用意していません。
 - 確認した環境は cmux 0.65.2、macOS 27 です。
+
+## ライセンス
+
+[MIT License](LICENSE)
+
+サイドバーの一部（タブ名の先頭の記号を取り除く処理、セッションへの移動処理）は、[Pencil Paper for cmux](https://github.com/simonzhang316/cmux-pencil-desk)（MIT License, Copyright (c) 2026 simonzhang316）を参考にしています。
 
 ## 参考文献
 
