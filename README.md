@@ -1,8 +1,8 @@
 # Kinari（生成り）
 
-長時間作業しても読みやすいことを目標にした、[cmux](https://github.com/manaflow-ai/cmux) / Ghostty 用の明るいターミナルテーマと、時計・カレンダー付きのサイドバーです。
+長時間作業しても疲れにくく読みやすいことを目指した、[cmux](https://github.com/manaflow-ai/cmux) / Ghostty 向けのライトテーマと、時計・カレンダー付きサイドバーです。
 
-配色は、背景色と文字色の見やすさに関する国内の研究をもとに決め、コントラスト比と色覚の違いを想定した色差を計算で確かめています。
+配色は、文字と背景の視認性に関する論文や知見を参考に検討し、十分なコントラスト比や多様な色覚を考慮した色差の計算結果を踏まえて調整しています。
 
 ![Kinari のモック。左がサイドバー、右が Claude Code を動かしているターミナル](https://raw.githubusercontent.com/shimajiro4892/Kinari/main/docs/screen.png)
 
