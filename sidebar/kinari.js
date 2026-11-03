@@ -226,6 +226,32 @@ function focusTab(w, t) {
   if (t.surfaceId) cmux("surface.focus", { surface_id: t.surfaceId, workspace_id: w.id });
 }
 
+// 名前の変更。カードのダブルクリックか、右クリックの「名前を変更」で入力欄に切り替える。
+// Return で確定、Esc で取り消し。空のまま確定すると、cmux が自動で付ける名前に戻す
+const [editing, setEditing] = signal(null);   // 入力欄にしているワークスペースの id
+// 確定した名前は、cmux のデータが追いつくまで（最長 3 秒）こちらで表示しておく
+const [renamed, setRenamed] = signal(null);
+const titleOf = (w) => {
+  const r = renamed();
+  if (r && w && r.id === w.id && epoch() - r.at < 3) return r.title;
+  return w?.title ?? "";
+};
+
+function renameWorkspace(w, text) {
+  setEditing(null);
+  if (DEMO || !w) return;
+  const title = String(text ?? "").trim();
+  if (!title) { resetName(w); return; }
+  if (title === w.title) return;
+  setRenamed({ id: w.id, title, at: epoch() });
+  cmux("workspace.action", { action: "rename", workspace_id: w.id, title });
+}
+function resetName(w) {
+  if (DEMO || !w) return;
+  setRenamed(null);
+  cmux("workspace.action", { action: "clear_name", workspace_id: w.id });
+}
+
 const MAX_TABS = 5;   // これより多いセッションは「ほか n 件」にまとめる
 
 function sessionRow(w, t) {
@@ -260,7 +286,7 @@ function badge(w) {
   ]).layoutPriority(2);
 }
 
-function workspaceCard(w, indent) {
+function workspaceCard(w, indent, isEditing) {
   const sel = () => isSel(w());
   const tabs = () => (w()?.tabs ?? []).slice()
     .sort((a, b) => stateOf(w(), a).rank - stateOf(w(), b).rank || (b.latestAt ?? 0) - (a.latestAt ?? 0));
@@ -274,13 +300,25 @@ function workspaceCard(w, indent) {
   };
   return VStack({ spacing: 0 }, [
     VStack({ spacing: 4 }, [
-      HStack({ spacing: 6 }, [
-        Text(() => w()?.title ?? "").font(14).weight("semibold").color(INK)
-          .lineLimit(1).truncation("tail").frame({ maxWidth: "infinity", alignment: "leading" }),
-        badge(w),
-      ]),
-      Text(place).font(11).monospaced().color(DIM).lineLimit(1).truncation("middle")
-        .frame({ maxWidth: "infinity", alignment: "leading" }),
+      // 名前とフォルダの行。名前の変更（ダブルクリック）はここだけで受け付ける
+      VStack({ spacing: 4 }, [
+        HStack({ spacing: 6 }, [
+          isEditing
+            ? TextField(() => w()?.title ?? "", {
+                placeholder: "ワークスペースの名前",
+                onSubmit: (t) => renameWorkspace(w(), t),
+                onCancel: () => setEditing(null),
+              }).font(14).weight("semibold").frame({ maxWidth: "infinity" })
+            : Text(() => titleOf(w())).font(14).weight("semibold").color(INK)
+                .lineLimit(1).truncation("tail").frame({ maxWidth: "infinity", alignment: "leading" }),
+          badge(w),
+        ]),
+        Text(place).font(11).monospaced().color(DIM).lineLimit(1).truncation("middle")
+          .frame({ maxWidth: "infinity", alignment: "leading" }),
+      ])
+        .frame({ maxWidth: "infinity" })
+        .onTap(() => selectWorkspace(w()))
+        .onDoubleTap(() => setEditing(w()?.id ?? null)),
       VStack({ spacing: 1 }, [
         ForEach({ items: shown, key: (t) => t.id }, (t) => sessionRow(w, t)),
         Text(() => (more() ? "ほか " + more() + " 件" : "")).font(11).color(DIM).paddingLeading(23),
@@ -298,23 +336,32 @@ function workspaceCard(w, indent) {
     .frame({ maxWidth: "infinity" })
     // カードのどこを押しても切り替わる（セッションの行は自分の onTap が優先される）
     .cursor("pointer")
-    .onTap(() => selectWorkspace(w()));
+    .onTap(() => selectWorkspace(w()))
+    .contextMenu([
+      Button("名前を変更", () => setEditing(w()?.id ?? null)),
+      Button("自動の名前に戻す", () => resetName(w())),
+    ]);
 }
 
 // グループがあればグループ見出しの下にまとめ、なければワークスペースを順に並べる
+// 名前を変えている間はキーを変えて、そのカードだけを入力欄つきで作り直す
 const entries = computed(() => {
   const ws = workspaces();
   const gs = new Map(groups().map((g) => [g.id, g]));
+  const ed = editing();
+  const card = (w, indent) => ({
+    key: "w:" + w.id + (ed === w.id ? ":edit" : ""), kind: "ws", id: w.id, indent, editing: ed === w.id,
+  });
   const out = [];
   const seen = new Set();
   for (const w of ws) {
     const g = w.group && gs.get(w.group);
-    if (!g) { out.push({ key: "w:" + w.id, kind: "ws", id: w.id, indent: false }); continue; }
+    if (!g) { out.push(card(w, false)); continue; }
     if (seen.has(g.id)) continue;
     seen.add(g.id);
     out.push({ key: "g:" + g.id, kind: "group", id: g.id });
     if (!g.collapsed) {
-      for (const m of ws.filter((x) => x.group === g.id)) out.push({ key: "w:" + m.id, kind: "ws", id: m.id, indent: true });
+      for (const m of ws.filter((x) => x.group === g.id)) out.push(card(m, true));
     }
   }
   return out;
@@ -345,7 +392,7 @@ function places() {
       const entry = e();
       if (entry.kind === "group") return groupHeader(entry.id);
       const w = () => workspaces().find((x) => x.id === entry.id);
-      return workspaceCard(w, entry.indent);
+      return workspaceCard(w, entry.indent, entry.editing);
     }),
   ]);
 }
