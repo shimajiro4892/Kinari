@@ -4,6 +4,10 @@
 
 配色は、背景色と文字色の見やすさに関する国内の研究をもとに決め、コントラスト比と色覚の違いを想定した色差を計算で確かめています。
 
+![Kinari のモック。左がサイドバー、右が Claude Code を動かしているターミナル](docs/screen.png)
+
+<sub>画面は架空のデータで作ったモックです（`docs/mock/screen.html`。`docs/mock/render.sh` で書き出し）。</sub>
+
 | ファイル | 内容 |
 |---|---|
 | `theme/Kinari` | ターミナルテーマ（Ghostty 形式） |

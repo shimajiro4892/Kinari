@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Kinari mock</title>
+<!-- README 用のモック。データはすべて架空。書き出しは docs/mock/render.sh -->
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=JetBrains+Mono:wght@400;700&display=block" rel="stylesheet">
+<style>
+  :root {
+    /* テーマ Kinari */
+    --bg: #f4f2ec; --fg: #2f2e2b; --cursor: #b84711; --sel: #d6dde8;
+    --c1: #bc3b28; --c2: #1d573a; --c3: #6d5400; --c4: #22508f; --c5: #a0478c; --c6: #1b6a73;
+    --c7: #e5e2da; --c8: #696660; --c9: #b84711; --c15: #ebe8e1;
+    /* サイドバー kinari */
+    --sb: #eceae3; --card: #f9f8f4; --edge: #d5d1c6; --sel-edge: #85817a;
+    --sun: #bc3b28; --sat: #22508f; --work: #22508f; --attn: #b84711;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #c9c6be; }
+  body { padding: 28px; font-family: -apple-system, "Hiragino Sans", sans-serif; -webkit-font-smoothing: antialiased; }
+  .window { width: 1224px; height: 744px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 0 0 0.5px #00000040, 0 18px 50px #00000030; background: var(--bg); }
+  .titlebar { height: 36px; background: var(--sb); display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--edge); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .titlebar .title { flex: 1; text-align: center; font-size: 12px; color: var(--c8); margin-right: 52px; }
+  .main { flex: 1; display: flex; min-height: 0; }
+
+  /* ---------- サイドバー ---------- */
+  .sidebar { width: 288px; background: var(--sb); padding: 12px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid var(--edge); color: var(--fg); }
+  .clock { display: flex; align-items: flex-end; gap: 10px; }
+  .clock .time { font: 300 30px/1 "SF Mono", Menlo, monospace; letter-spacing: -0.5px; }
+  .clock .date { font-size: 13px; font-weight: 600; }
+  .clock .sub { font-size: 11px; color: var(--sun); margin-top: 1px; }
+  .clock .meta { padding-bottom: 3px; }
+  .cal-head { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; text-align: center; }
+  .cal .wd { font-size: 11px; font-weight: 600; color: var(--c8); height: 18px; }
+  .cal .d { height: 24px; display: flex; align-items: center; justify-content: center; font: 12px "SF Mono", Menlo, monospace; }
+  .cal .d span { width: 22px; height: 22px; line-height: 22px; border-radius: 50%; }
+  .cal .today span { background: var(--fg); color: #fff; font-weight: 700; }
+  .sun { color: var(--sun) !important; } .sat { color: var(--sat) !important; } .past { color: var(--c8); }
+  .rule { height: 1px; background: var(--edge); }
+  .sec { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--c8); padding: 0 6px; }
+  .sec .n { font: 11px "SF Mono", Menlo, monospace; }
+  .cards { display: flex; flex-direction: column; gap: 6px; }
+  .card { padding: 8px; border-radius: 8px; border: 1.5px solid transparent; }
+  .card.selected { background: var(--card); border-color: var(--sel-edge); }
+  .card .top { display: flex; align-items: center; gap: 6px; }
+  .card .name { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge-wait { font-size: 11px; font-weight: 700; color: #fff; background: var(--attn); border-radius: 4px; padding: 1px 6px; }
+  .badge-work { font-size: 11px; font-weight: 600; color: var(--work); }
+  .place { font: 11px "SF Mono", Menlo, monospace; color: var(--c8); margin: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sess { display: flex; align-items: center; gap: 7px; padding: 3px 6px; border-radius: 5px; font-size: 12px; }
+  .sess.focused { background: #2f2e2b12; }
+  .sess .mk { width: 10px; font: 700 10px "SF Mono", Menlo, monospace; text-align: center; }
+  .sess .t { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sess .r { font-size: 11px; color: var(--c8); }
+  .sess.wait .t { font-weight: 600; }
+  .sess.wait .mk, .sess.wait .r { color: var(--attn); font-weight: 600; }
+  .sess.work .mk, .sess.work .r { color: var(--work); font-weight: 600; }
+  .sess.idle .mk { color: var(--c8); }
+
+  /* ---------- ターミナル ---------- */
+  .term { flex: 1; padding: 14px 18px; font-family: "JetBrains Mono", "BIZ UDGothic", monospace; font-size: 13.5px; line-height: 1.38; color: var(--fg); white-space: pre; overflow: hidden; font-variant-ligatures: none; }
+  .term .blk7 { background: var(--c7); display: block; margin: 0 -18px; padding: 2px 18px; }
+  .term .blk15 { background: var(--c15); display: block; margin: 0 -18px; padding: 2px 18px; }
+  .b { font-weight: 700; }
+  .k1 { color: var(--c1); } .k2 { color: var(--c2); } .k3 { color: var(--c3); } .k4 { color: var(--c4); }
+  .k5 { color: var(--c5); } .k6 { color: var(--c6); } .k8 { color: var(--c8); } .k9 { color: var(--c9); }
+  .selection { background: var(--sel); }
+  .box { display: block; border: 1px solid var(--c8); border-radius: 6px; padding: 4px 10px; margin-top: 6px; }
+  .cur { background: var(--cursor); color: var(--bg); }
+  .perm { display: block; border: 1px solid var(--c4); border-radius: 6px; padding: 6px 10px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <div class="dot" style="background:#ec6a5e"></div><div class="dot" style="background:#f4bf4f"></div><div class="dot" style="background:#61c554"></div>
+    <div class="title">検査アプリ — 帳票の PDF 出力</div>
+  </div>
+  <div class="main">
+    <aside class="sidebar">
+      <div class="clock">
+        <div class="time">14:32</div>
+        <div class="meta"><div class="date">11月3日（火）</div><div class="sub">文化の日</div></div>
+      </div>
+      <div>
+        <div class="cal-head">2026年 11月</div>
+        <div class="cal">
+          <div class="wd sun">日</div><div class="wd">月</div><div class="wd">火</div><div class="wd">水</div><div class="wd">木</div><div class="wd">金</div><div class="wd sat">土</div>
+          <div class="d sun"><span>1</span></div><div class="d past"><span>2</span></div><div class="d today"><span>3</span></div><div class="d"><span>4</span></div><div class="d"><span>5</span></div><div class="d"><span>6</span></div><div class="d sat"><span>7</span></div>
+          <div class="d sun"><span>8</span></div><div class="d"><span>9</span></div><div class="d"><span>10</span></div><div class="d"><span>11</span></div><div class="d"><span>12</span></div><div class="d"><span>13</span></div><div class="d sat"><span>14</span></div>
+          <div class="d sun"><span>15</span></div><div class="d"><span>16</span></div><div class="d"><span>17</span></div><div class="d"><span>18</span></div><div class="d"><span>19</span></div><div class="d"><span>20</span></div><div class="d sat"><span>21</span></div>
+          <div class="d sun"><span>22</span></div><div class="d sun"><span>23</span></div><div class="d"><span>24</span></div><div class="d"><span>25</span></div><div class="d"><span>26</span></div><div class="d"><span>27</span></div><div class="d sat"><span>28</span></div>
+          <div class="d sun"><span>29</span></div><div class="d"><span>30</span></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
+        </div>
+      </div>
+      <div class="rule"></div>
+      <div class="sec"><span>ワークスペース</span><span class="n">3</span></div>
+      <div class="cards">
+        <div class="card selected">
+          <div class="top"><div class="name">検査アプリ</div><span class="badge-wait">入力待ち 1</span></div>
+          <div class="place">…/src/inspection-app  ⎇ feature/report-export ●</div>
+          <div class="sess wait"><span class="mk">!</span><span class="t">単体テストの修正</span><span class="r">入力待ち</span></div>
+          <div class="sess work focused"><span class="mk">●</span><span class="t">帳票の PDF 出力</span><span class="r">作業中</span></div>
+          <div class="sess idle"><span class="mk">○</span><span class="t">zsh</span><span class="r">14:02</span></div>
+        </div>
+        <div class="card">
+          <div class="top"><div class="name">社内ドキュメント</div><span class="badge-work">● 作業中</span></div>
+          <div class="place">~/docs/handbook  ⎇ main</div>
+          <div class="sess work"><span class="mk">●</span><span class="t">オンボーディング資料の見直し</span><span class="r">作業中</span></div>
+        </div>
+        <div class="card">
+          <div class="top"><div class="name">terminal</div></div>
+          <div class="place">~</div>
+          <div class="sess idle"><span class="mk">○</span><span class="t">zsh</span><span class="r">11:20</span></div>
+        </div>
+      </div>
+    </aside>
+<div class="term"><span class="blk7">&gt; 帳票の PDF 出力で、日付を和暦で表示するようにして</span>
+<span class="b">⏺</span> 日付の整形は formatDate にまとまっているので、そこに和暦の書式を足します。
+
+<span class="k2">⏺</span> <span class="b">Read</span>(src/report/format.ts)
+  <span class="k8">⎿  Read 48 lines</span>
+
+<span class="k2">⏺</span> <span class="b">Update</span>(src/report/format.ts)
+  <span class="k8">⎿  Updated src/report/format.ts with 3 additions and 1 removal</span>
+     <span class="k8">12</span>   export function formatDate(d: Date) {
+     <span class="k8">13</span> <span class="k1">-   return d.toLocaleDateString("ja-JP");</span>
+     <span class="k8">13</span> <span class="k2">+   return new Intl.DateTimeFormat("ja-JP-u-ca-japanese", {</span>
+     <span class="k8">14</span> <span class="k2">+     era: "long", year: "numeric", month: "long", day: "numeric",</span>
+     <span class="k8">15</span> <span class="k2">+   }).format(d);</span>
+     <span class="k8">16</span>   }
+
+<span class="k2">⏺</span> <span class="b">Bash</span>(npm test -- format)
+<span class="blk15">  ⎿  <span class="k2 b">PASS</span> src/report/format.test.ts
+       <span class="k2">✓</span> 令和の日付を整形できる <span class="k8">(3 ms)</span>
+       <span class="k2">✓</span> 元年は「令和元年」と表示する <span class="k8">(1 ms)</span>
+       <span class="k3">⚠</span> <span class="k3">タイムゾーン未指定の Date を渡している箇所が 2 件あります</span></span>
+<span class="b">⏺</span> テストは通りました。<span class="selection">タイムゾーンの警告</span>は、呼び出し側で Asia/Tokyo を
+  指定すれば消えます。あわせて直しますか？
+
+<span class="k9">✻</span> <span class="k9">Pondering…</span> <span class="k8">(12s · esc to interrupt)</span>
+<span class="box"><span class="k8">&gt;</span> <span class="cur"> </span></span>  <span class="k6">⏸ plan mode on</span> <span class="k8">(shift+tab to cycle)</span></div>
+  </div>
+</div>
+</body>
+</html>
