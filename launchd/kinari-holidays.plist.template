@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- __HOME__ は自分のホームディレクトリの絶対パスに置き換える（README の手順を参照） -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>io.github.shimajiro4892.kinari-holidays</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>-I</string>
+    <string>__HOME__/.config/cmux/scripts/update-holidays.py</string>
+  </array>
+  <!-- 毎月 1 日 9:00。スリープ中だった場合は次に起きたときに実行される -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <!-- ログイン時にも 1 回 -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/kinari-holidays.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/kinari-holidays.log</string>
+</dict>
+</plist>

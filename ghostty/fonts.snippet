@@ -1,0 +1,13 @@
+# 任意: ~/.config/ghostty/config に追記するフォント設定。
+# 英数字は JetBrains Mono（Ghostty に内蔵）、日本語は BIZ UDGothic（macOS の追加フォント。
+# 入っていなければ Font Book からダウンロードできる）。
+# 参考: https://zenn.dev/lonsagisawa/articles/ghostty-japanese-settings
+font-family = JetBrains Mono
+font-family = BIZ UDGothic
+
+# リガチャ（合字）を無効化
+font-feature = -dlig
+
+# cmux は日本語に独自のフォールバックフォントを差し込み、それが font-family より優先される。
+# 日本語の範囲（記号・かな・漢字・全角）を明示的に BIZ UDGothic に割り当てて固定する。
+font-codepoint-map = U+3000-U+303F,U+3040-U+30FF,U+31F0-U+31FF,U+3400-U+4DBF,U+4E00-U+9FFF,U+F900-U+FAFF,U+FE30-U+FE4F,U+FF00-U+FFEF=BIZ UDGothic
