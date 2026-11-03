@@ -164,12 +164,15 @@ function sample() {
 const workspaces = computed(() => (DEMO ? sample() : (data.workspaces() ?? [])));
 const groups = computed(() => (DEMO ? [] : (data.groups() ?? [])));
 
+// stateOf・cleanTitle・focusTab は Pencil Paper for cmux の desk.js から流用・改変した。
+//   https://github.com/simonzhang316/cmux-pencil-desk
+//   Copyright (c) 2026 simonzhang316 / MIT License（全文はリポジトリの LICENSE を参照）
 function stateOf(w, t) {
   const a = (w?.agents ?? []).find((x) => x.panelId === t?.id);
   return STATE[a?.status] ?? STATE.none;
 }
 
-// エージェントがタブ名の先頭に付ける記号（✳ ◐ など）を外す
+// エージェントがタブ名の先頭に付ける記号（✳ ◐ など）を外す（Pencil Paper から流用）
 const cleanTitle = (s) => String(s ?? "").replace(/^[^\p{L}\p{N}~(]+/u, "") || "（無題）";
 const dirTail = (p) => {
   const s = String(p ?? "").replace(/\/+$/, "");
@@ -215,6 +218,7 @@ function selectWorkspace(w) {
   setSelOverride({ id: w.id, at: epoch() });
   cmux("workspace.select", { workspace_id: w.id });
 }
+// セッションへの移動（Pencil Paper の jump() から流用・改変）
 function focusTab(w, t) {
   if (DEMO || !w) return;
   setSelOverride({ id: w.id, at: epoch() });

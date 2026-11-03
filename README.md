@@ -113,7 +113,12 @@ rm ~/Library/LaunchAgents/io.github.shimajiro4892.kinari-holidays.plist
 
 [MIT License](LICENSE)
 
-サイドバーの一部（タブ名の先頭の記号を取り除く処理、セッションへの移動処理）は、[Pencil Paper for cmux](https://github.com/simonzhang316/cmux-pencil-desk)（MIT License, Copyright (c) 2026 simonzhang316）を参考にしています。
+### 流用したコード
+
+`sidebar/kinari.js` の一部（タブ名の先頭の記号を取り除く処理、セッションへの移動処理、セッションの状態を調べる処理）は、[Pencil Paper for cmux](https://github.com/simonzhang316/cmux-pencil-desk) のコードを流用・改変しています。
+
+- Copyright (c) 2026 simonzhang316
+- MIT License（条文は [LICENSE](LICENSE) の後半に収録）
 
 ## 参考文献
 
